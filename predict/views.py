@@ -1,9 +1,11 @@
 from django.http import JsonResponse
 from django.shortcuts import render
 import pandas as pd
+from predict.models import PredResults
 
 
 # Create your views here.
+
 
 def predict(request):
     return render(request, 'predict.html')
@@ -18,15 +20,21 @@ def predict_changes(request):
         petal_width = float(request.POST.get('petal_width'))
 
         # Unpickle model
-        model = pd.read_pickle(r"D:\Projetos\IrisPredict\iris.csv\new_model.pickle")
+        model = pd.read_pickle(r"D:\Projetos\IrisPredict\irismodel.pickle")
         # Make prediction
         result = model.predict([[sepal_length, sepal_width, petal_length, petal_width]])
 
         classification = result[0]
 
-    ''' PredResults.objects.create(sepal_length=sepal_length, sepal_width=sepal_width, petal_length=petal_length,
-                                petal_width=petal_width, classification=classification)
-     '''
+        PredResults.objects.create(sepal_length=sepal_length, sepal_width=sepal_width, petal_length=petal_length,
+                                   petal_width=petal_width, classification=classification)
+
     return JsonResponse({'result': classification, 'sepal_length': sepal_length,
                          'sepal_width': sepal_width, 'petal_length': petal_length, 'petal_width': petal_width},
                         safe=False)
+
+
+def view_results(request):
+    # Submit prediction and show all
+    data = {"dataset": PredResults.objects.all()}
+    return render(request, "results.html", data)
